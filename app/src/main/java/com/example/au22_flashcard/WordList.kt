@@ -1,48 +1,35 @@
 package com.example.au22_flashcard
 
-class WordList() {
+import android.content.Context
+import kotlinx.coroutines.Deferred
+
+class WordList(context: Context) {
     private val wordList = mutableListOf<Word>()
     private val usedWords = mutableListOf<Word>()
+    var db : AppDatabase
+
 
     init {
+        db = AppDatabase.getInstance(context)
         initializeWords()
     }
 
 
     fun initializeWords() {
-        val word = Word("Hello", "Hej")
-        wordList.add(word)
-        wordList.add(Word("Good bye", "Hej då"))
-        wordList.add(Word("Thank you", "Tack"))
-        wordList.add(Word("Welcome", "Välkommen"))
-        wordList.add(Word("Computer", "Dator"))
 
+//        val word = Word("Hello", "Hej")
+//        wordList.add(word)
+//        wordList.add(Word("Good bye", "Hej då"))
+//        wordList.add(Word("Thank you", "Tack"))
+//        wordList.add(Word("Welcome", "Välkommen"))
+//        wordList.add(Word("Computer", "Dator"))
     }
 
-//    fun getNewWord() : Word {
-//        val rnd = (0 until wordList.size).random()
-//        return wordList[rnd]
-//    }
 
-
-    // alternativ 3
-//    fun getNewWord() : Word {
-//        if(wordList.isEmpty() ) {
-//            initializeWords()
-//        }
-//
-//        val rnd = (0 until wordList.size).random()
-//        val word = wordList.removeAt(rnd)
-//
-//        return word
-//    }
-
-    //alternativ 1
     fun getNewWord() : Word {
         if (wordList.size == usedWords.size) {
             usedWords.clear()
         }
-
         var word : Word? = null
 
         do {
