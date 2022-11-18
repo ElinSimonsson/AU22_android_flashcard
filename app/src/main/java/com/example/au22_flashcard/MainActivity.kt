@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         var word : Word?
 
         do {
-            val rnd = (wordList.indices).random()
+            val rnd = (0 until wordList.size).random()
             word = wordList[rnd]
         } while(usedWords.contains(word))
 
