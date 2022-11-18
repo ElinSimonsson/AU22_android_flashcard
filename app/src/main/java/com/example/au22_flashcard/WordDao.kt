@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface WordDao {
@@ -18,6 +19,9 @@ interface WordDao {
     //getAllWords
     @Query ("SELECT * FROM word_table")
     fun getAllWords () : List <Word>
+
+    @Update
+    fun update (word: Word)
 
 
 

@@ -1,30 +1,35 @@
 package com.example.au22_flashcard
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.DashPathEffect
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
+import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.ActionBar
+import androidx.cardview.widget.CardView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.*
-import org.w3c.dom.Text
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
-    lateinit var job : Job
-    lateinit var wordView : TextView
-    lateinit var floatingActionButton: FloatingActionButton
-    lateinit var englishToSwedishButton : TextView
-    lateinit var swedishToEnglishButton : TextView
-    var currentWord : Word? = null
-    lateinit var db : AppDatabase
-    lateinit var list : Deferred<List<Word>>
-    lateinit var wordList : List<Word>
-    lateinit var usedWords : MutableList<Word>
-    var checkLanguage = "swedish"
+
+    private lateinit var job : Job
+    private lateinit var wordView : TextView
+    private lateinit var noWordsTextView : TextView
+    private lateinit var flagImageView: ImageView
+    private lateinit var changeFAB : FloatingActionButton
+    private lateinit var seeAllWordsFAB : FloatingActionButton
+    private lateinit var cardView : CardView
+    private var currentWord : Word? = null
+    private lateinit var db : AppDatabase
+    private lateinit var list : Deferred<List<Word>>
+    private lateinit var wordList : List<Word>
+    private lateinit var usedWords : MutableList<Word>
+    private var checkLanguage = "english"
 
     override val coroutineContext : CoroutineContext
     get() = Dispatchers.Main + job
@@ -37,38 +42,37 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         db = AppDatabase.getInstance(this)
 
         wordView = findViewById(R.id.wordTextView)
-        englishToSwedishButton = findViewById(R.id.englishToSwedishTextView)
-        swedishToEnglishButton = findViewById(R.id.swedishToEnglishTextView)
+        noWordsTextView = findViewById(R.id.noWordsAddedTextView)
+        flagImageView = findViewById(R.id.flagImageView)
+        cardView = findViewById(R.id.cardView)
+        changeFAB = findViewById(R.id.changeFAB)
+        seeAllWordsFAB = findViewById(R.id.seeAllWordsFAB)
         wordList = mutableListOf()
         usedWords = mutableListOf()
-        floatingActionButton = findViewById<FloatingActionButton?>(R.id.floatingActionButton)
 
-        englishToSwedishButton.setOnClickListener {
-            englishButtonPressedSetButtonsColor()
-            checkLanguage = "english"
-            changeLanguage()
-        }
+        initializeLayout()
 
-        swedishToEnglishButton.setOnClickListener {
-            swedishButtonPressedSetButtonsColor()
-            checkLanguage = "swedish"
-            changeLanguage()
-        }
-
-        floatingActionButton.setOnClickListener {
-            val intent = Intent(this, AddWordActivity::class.java)
-            startActivity(intent)
-        }
-
-        wordView.setOnClickListener {
+        cardView.setOnClickListener {
             revealTranslation()
         }
-    }
 
-    private fun changeLanguage() {
-        when (checkLanguage) {
-            "swedish" -> wordView.text = currentWord?.swedish
-            "english" -> wordView.text = currentWord?.english
+        changeFAB.setOnClickListener {
+            if (checkLanguage == "english") {
+                if (wordList.isNotEmpty()) {
+                    checkLanguage = "swedish"
+                    changeLanguageAndLayout()
+                }
+            } else {
+                if (wordList.isNotEmpty()) {
+                    checkLanguage = "english"
+                    changeLanguageAndLayout()
+                }
+            }
+        }
+
+        seeAllWordsFAB.setOnClickListener {
+            val intent = Intent(this, AllWordsActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -77,36 +81,90 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         loadAllWordsAndShowWord()
     }
 
-    fun loadAllWordsAndShowWord() {
+    private fun changeLanguageAndLayout () {
+        if(checkLanguage == "swedish" && changeFAB.backgroundTintList == ColorStateList.valueOf(Color.LTGRAY)) {
+
+            changeFAB.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#db30bf"))
+            wordView.text = getString(R.string.showSwedishWord_textview, currentWord?.swedish)
+            flagImageView.setImageResource(R.drawable.sveriges_flagga)
+
+        } else if (checkLanguage == "swedish" && changeFAB.backgroundTintList ==
+                ColorStateList.valueOf(Color.parseColor("#db30bf"))) {
+
+            wordView.text = getString(R.string.showSwedishWord_textview, currentWord?.swedish)
+            flagImageView.setImageResource(R.drawable.sveriges_flagga)
+            changeFAB.backgroundTintList = ColorStateList.valueOf(Color.LTGRAY)
+
+        } else if (checkLanguage == "english" && changeFAB.backgroundTintList == ColorStateList.valueOf(Color.LTGRAY)) {
+
+            changeFAB.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#db30bf"))
+            wordView.text = getString(R.string.word_textView, currentWord?.english)
+            flagImageView.setImageResource(R.drawable.englands_flagga)
+
+        } else {
+
+            wordView.text = getString(R.string.word_textView, currentWord?.english)
+            flagImageView.setImageResource(R.drawable.englands_flagga)
+            changeFAB.backgroundTintList = ColorStateList.valueOf(Color.LTGRAY)
+        }
+    }
+
+    private fun loadAllWordsAndShowWord() {
         list = loadAllWords()
         launch {
             wordList = list.await()
             if (wordList.isEmpty()) {
-                val messageToUser ="The list is empty, add new word by clicking addButton"
-                wordView.text = messageToUser
+                setLayoutIfListIsEmpty()
             } else {
+                setLayoutIfListIsNotEmpty()
                 showNewWord()
             }
         }
     }
 
-    fun revealTranslation() {
-        val english = currentWord?.english
-        Log.d("!!!", "engelska : $english")
+    private fun setLayoutIfListIsEmpty() {
+        cardView.visibility = View.GONE
+        noWordsTextView.visibility = View.VISIBLE
+
+    }
+
+    private fun setLayoutIfListIsNotEmpty() {
+        cardView.visibility = View.VISIBLE
+        noWordsTextView.visibility = View.GONE
+
+    }
+
+    private fun initializeLayout () {
+        val actionBar: ActionBar? = supportActionBar
+        actionBar?.title = "Flashcards"
+        changeFAB.backgroundTintList = ColorStateList.valueOf(Color.LTGRAY)
+        seeAllWordsFAB.backgroundTintList =
+            ColorStateList.valueOf(Color.parseColor("#db30bf"))
+    }
+
+    private fun revealTranslation() {
         when (checkLanguage) {
-            "swedish" -> wordView.text = currentWord?.english
-            "english" -> wordView.text = currentWord?.swedish
+            "swedish" -> {
+                wordView.text = currentWord?.english
+                flagImageView.setImageResource(R.drawable.englands_flagga)
+                checkLanguage = "english"
+            }
+            "english" -> {
+                wordView.text = currentWord?.swedish
+                flagImageView.setImageResource(R.drawable.sveriges_flagga)
+                checkLanguage = "swedish"
+            }
         }
     }
 
-    fun getNewWord() : Word {
+    private fun getNewWord() : Word {
         if (wordList.size == usedWords.size) {
             usedWords.clear()
         }
-        var word : Word? = null
+        var word : Word?
 
         do {
-            val rnd = (0 until wordList.size).random()
+            val rnd = (wordList.indices).random()
             word = wordList[rnd]
         } while(usedWords.contains(word))
 
@@ -115,36 +173,31 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         return word
     }
 
-  fun showNewWord () {
+  private fun showNewWord () {
       currentWord = getNewWord()
       when (checkLanguage) {
-          "swedish" -> wordView.text = currentWord?.swedish
-          "english" -> wordView.text = currentWord?.english
+          "swedish" -> {
+              wordView.text = currentWord?.swedish
+              flagImageView.setImageResource(R.drawable.sveriges_flagga)
+          }
+          "english" -> {
+              wordView.text = currentWord?.english
+              flagImageView.setImageResource(R.drawable.englands_flagga)
+          }
       }
     }
 
-    fun loadAllWords () : Deferred<List<Word>> =
+   private fun loadAllWords () : Deferred<List<Word>> =
         async (Dispatchers.IO) {
             db.wordDao.getAllWords()
         }
 
-    fun englishButtonPressedSetButtonsColor () {
-        englishToSwedishButton.setBackgroundResource(R.drawable.rounded_button)
-        englishToSwedishButton.setTextColor(Color.WHITE)
-        swedishToEnglishButton.setBackgroundResource(R.drawable.list_divider)
-        swedishToEnglishButton.setTextColor(Color.parseColor("#D50000"))
-    }
-
-    fun swedishButtonPressedSetButtonsColor () {
-        swedishToEnglishButton.setBackgroundResource(R.drawable.rounded_button)
-        swedishToEnglishButton.setTextColor(Color.WHITE)
-        englishToSwedishButton.setBackgroundResource(R.drawable.list_divider)
-        englishToSwedishButton.setTextColor(Color.parseColor("#D50000"))
-    }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event?.action == MotionEvent.ACTION_UP) {
-            showNewWord()
+            if (wordList.isNotEmpty()) {
+                showNewWord()
+            }
         }
         return true
     }

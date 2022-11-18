@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">AU22_flashcard</string>
+    <string name="titleFlashCard_textview">Flashcards</string>
+    <string name="listIsEmpty_textview">No words added</string>
+
+    <string name="hintSwedishWord_editText">Swedish</string>
+    <string name="hintEnglishWord_editText">English</string>
+    <string name="showEnglishWord_textview">%1$s</string>
+    <string name="showSwedishWord_textview">%1$s</string>
+    <string name="word_textView">%1$s</string>
+    <string name="tapToTranslate_textview">Tap to translate</string>
+    <string name="deleteAllWords_textview">Delete all words</string>
+
+    <string name="englishToSwedish_button">English - Swedish</string>
+    <string name="swedishToEnglish_button">Swedish - English</string>
+    <string name="showAllWords_button">Show all words / add new word</string>
+    <string name="addNewWord_button">Add new word</string>
+    <string name="save_button">Save</string>
+    <string name="add_button">Add</string>
 </resources>
